@@ -1,0 +1,2 @@
+rootProject.name='SleepLog'
+include ':app'
