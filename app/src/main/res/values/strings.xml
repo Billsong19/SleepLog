@@ -10,4 +10,10 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="log_you_shelp">Log you sHelp</string>
+
+    <!--GEEKSFORGEEKS STOPWATCH IMPLEMENTATION -->
+<!--    <string name="app_name">GFG|Stopwatch</string>-->
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="reset">Reset</string>
 </resources>
