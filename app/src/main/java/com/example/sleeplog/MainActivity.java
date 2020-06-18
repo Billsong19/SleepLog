@@ -1,5 +1,7 @@
 package com.example.sleeplog;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.SystemClock;
 //import android.support.v7.app.AppCompactActivity;
@@ -10,10 +12,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
+
 public class MainActivity extends AppCompatActivity {
 
     TextView timer ;
-    Button start, pause, reset, stopAndLog;
+    Button startButton, pauseButton, resetButton, stopAndLog, settingsButton;
     long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L ;
     Handler handler;
     int Seconds, Minutes, Hours ;
@@ -23,26 +27,31 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        File _sleepLog = new File(this.getFilesDir(), "SleepLog");
+
+
+
         timer = (TextView)findViewById(R.id.Timer);
-        start = (Button)findViewById(R.id.Start);
-        pause = (Button)findViewById(R.id.Stop);
-        reset = (Button)findViewById(R.id.Reset);
+        startButton = (Button)findViewById(R.id.Start);
+        pauseButton = (Button)findViewById(R.id.Stop);
+        resetButton = (Button)findViewById(R.id.Reset);
         stopAndLog = (Button)findViewById(R.id.FinishedSleeping);
+        settingsButton = (Button)findViewById(R.id.Settings);
 
         handler = new Handler() ;
 
-        start.setOnClickListener(new View.OnClickListener() {
+        startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 StartTime = SystemClock.uptimeMillis();
                 handler.postDelayed(runnable, 0);
 
-                reset.setEnabled(false);
+                resetButton.setEnabled(false);
             }
         });
 
-        pause.setOnClickListener(new View.OnClickListener() {
+        pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -50,12 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
                 handler.removeCallbacks(runnable);
 
-                reset.setEnabled(true);
+                resetButton.setEnabled(true);
 
             }
         });
 
-        reset.setOnClickListener(new View.OnClickListener() {
+        resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -70,7 +79,16 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
+        final Intent settings = new Intent(MainActivity.this, SettingsActivity.class);
+        settingsButton.setOnClickListener(view -> startActivity(settings));
+//        settingsButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view)
+//            {
+//               startActivity(settings);
+//
+//            }
+//        });
     }
 
     public Runnable runnable = new Runnable() {
@@ -89,10 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
             Seconds = Seconds % 60;
 
-            timer.setText("" + Hours + ":" + Minutes + ":"
-                    + String.format("%02d", Seconds));
+            timer.setText("" + String.format("%02d", Hours) + ":" + String.format("%02d", Minutes)
+                    + ":" + String.format("%02d", Seconds));
 
             handler.postDelayed(this, 0);
         }
-
     };}
