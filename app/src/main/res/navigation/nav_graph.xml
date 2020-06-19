@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/mainActivity">
 
     <fragment
         android:id="@+id/FirstFragment"
@@ -25,4 +25,20 @@
             android:id="@+id/action_SecondFragment_to_FirstFragment"
             app:destination="@id/FirstFragment" />
     </fragment>
+    <activity
+        android:id="@+id/mainActivity"
+        android:name="com.example.sleeplog.MainActivity"
+        android:label="MainActivity" >
+        <action
+            android:id = "@+id/action_mainActivity_to_settingsActivity"
+            app:destination="@+id/settingsActivity" />
+    </activity>
+    <activity
+        android:id="@+id/settingsActivity"
+        android:name="com.example.sleeplog.SettingsActivity"
+        android:label="SettingsActivity" >
+        <action
+            android:id = "@+id/action_settingsActivity_to_mainActivity"
+            app:destination="@+id/mainActivity" />
+    </activity>
 </navigation>

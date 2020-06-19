@@ -1,9 +1,7 @@
 package com.example.sleeplog;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
-import android.os.SystemClock;
 //import android.support.v7.app.AppCompactActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -13,21 +11,45 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+//TODO make unit tests for clock? Would maybe have to encapsulate clock logic for
+// tests.
 
 public class MainActivity extends AppCompatActivity {
 
     TextView timer ;
-    Button startButton, pauseButton, resetButton, stopAndLog, settingsButton;
-    long MillisecondTime, StartTime, TimeBuff, UpdateTime = 0L ;
+    Button startButton, pauseButton, resetButton, stopAndLog, settingsButton, sleepLogButton;
+    long MillisecondTime, TimeBuff, UpdateTime = 0L ;
+    LocalDateTime _startTime;
+    Duration _timeElapsed;
+    File _sleepLogFile;
+
     Handler handler;
-    int Seconds, Minutes, Hours ;
+    long Seconds, Minutes, _hours;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //get internal file directory, points to/creates SleepLog file
+        //AppCompatActivity extends Context so we use it in File constructor param
 
-        File _sleepLog = new File(this.getFilesDir(), "SleepLog");
+        _sleepLogFile = new File(this.getFilesDir(), "SleepLog.txt");
+
+//        FileOutputStream stream;
+//        try {
+//            stream = new FileOutputStream(_sleepLogFile);
+//            stream.write("HELLO WORLD".getBytes());
+//            stream.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        //read
+
 
 
 
@@ -37,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         resetButton = (Button)findViewById(R.id.Reset);
         stopAndLog = (Button)findViewById(R.id.FinishedSleeping);
         settingsButton = (Button)findViewById(R.id.Settings);
+        sleepLogButton = (Button)findViewById(R.id.SleepLog);
+
 
         handler = new Handler() ;
 
@@ -44,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                StartTime = SystemClock.uptimeMillis();
+                _startTime = LocalDateTime.now();
                 handler.postDelayed(runnable, 0);
 
                 resetButton.setEnabled(false);
@@ -54,8 +78,6 @@ public class MainActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                TimeBuff += MillisecondTime;
 
                 handler.removeCallbacks(runnable);
 
@@ -67,48 +89,35 @@ public class MainActivity extends AppCompatActivity {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                MillisecondTime = 0L ;
-                StartTime = 0L ;
-                TimeBuff = 0L ;
-                UpdateTime = 0L ;
-                Seconds = 0 ;
-                Minutes = 0 ;
-
                 timer.setText("00:00:00");
 
+                SleepSession sleepSession = new SleepSession(_startTime, LocalDateTime.now());
+                FileOutputStream stream;
+                try {
+                    stream = new FileOutputStream(_sleepLogFile);
+                    stream.write(sleepSession.get_byteArray());
+                    System.out.println("Wrote " + sleepSession.get_byteArray().toString() + " to SleepLog.txt");
+                    stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
-        final Intent settings = new Intent(MainActivity.this, SettingsActivity.class);
-        settingsButton.setOnClickListener(view -> startActivity(settings));
-//        settingsButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view)
-//            {
-//               startActivity(settings);
-//
-//            }
-//        });
+
+        final Intent _settings = new Intent(MainActivity.this, SettingsActivity.class);
+        settingsButton.setOnClickListener(view -> startActivity(_settings));
+
+        final Intent _sleepLog = new Intent(MainActivity.this, SleepLogActivity.class);
+        sleepLogButton.setOnClickListener(view -> startActivity(_sleepLog));
     }
 
     public Runnable runnable = new Runnable() {
 
         public void run() {
 
-            MillisecondTime = SystemClock.uptimeMillis() - StartTime;
+            SleepSession sleepSession = new SleepSession(_startTime, LocalDateTime.now());
 
-            UpdateTime = TimeBuff + MillisecondTime;
-
-            Seconds = (int) (UpdateTime / 1000);
-
-            Hours = Seconds / 3600;
-
-            Minutes = Seconds / 60;
-
-            Seconds = Seconds % 60;
-
-            timer.setText("" + String.format("%02d", Hours) + ":" + String.format("%02d", Minutes)
-                    + ":" + String.format("%02d", Seconds));
+            timer.setText(sleepSession.toString());
 
             handler.postDelayed(this, 0);
         }
