@@ -24,10 +24,12 @@ public class SettingsActivity extends AppCompatActivity {
             Scanner myReader = new Scanner(_sleepLogFile);
             String str = myReader.nextLine();
             System.out.println(str);
-            button2.setText(str);
+            System.out.println(SleepSession.parse(str).toString());
+            button2.setText(SleepSession.parse(str).toString());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
 
         button3 = (Button)findViewById(R.id.button3);
         button4 = (Button)findViewById(R.id.button4);

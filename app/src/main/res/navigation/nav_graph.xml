@@ -32,6 +32,9 @@
         <action
             android:id = "@+id/action_mainActivity_to_settingsActivity"
             app:destination="@+id/settingsActivity" />
+        <action
+            android:id="@+id/action_mainActivity_to_sleepLogActivity"
+            app:destination="@id/sleepLogActivity" />
     </activity>
     <activity
         android:id="@+id/settingsActivity"
@@ -40,5 +43,13 @@
         <action
             android:id = "@+id/action_settingsActivity_to_mainActivity"
             app:destination="@+id/mainActivity" />
+    </activity>
+    <activity
+        android:id="@+id/sleepLogActivity"
+        android:name="com.example.sleeplog.SleepLogActivity"
+        android:label="SleepLogActivity" >
+        <action
+            android:id="@+id/action_sleepLogActivity_to_mainActivity"
+            app:destination="@id/mainActivity" />
     </activity>
 </navigation>

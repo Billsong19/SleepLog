@@ -10,8 +10,10 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -92,12 +94,15 @@ public class MainActivity extends AppCompatActivity {
                 timer.setText("00:00:00");
 
                 SleepSession sleepSession = new SleepSession(_startTime, LocalDateTime.now());
-                FileOutputStream stream;
+                FileWriter writer;
+                BufferedWriter bufferedWriter;
                 try {
-                    stream = new FileOutputStream(_sleepLogFile);
-                    stream.write(sleepSession.get_byteArray());
-                    System.out.println("Wrote " + sleepSession.get_byteArray().toString() + " to SleepLog.txt");
-                    stream.close();
+                    bufferedWriter = new BufferedWriter(new FileWriter(_sleepLogFile, true));
+                    bufferedWriter.write(sleepSession.getLogString());
+                    bufferedWriter.newLine();
+                    System.out.println("Wrote " + sleepSession.get_byteArray().toString() +
+                            " to SleepLog.txt");
+                    bufferedWriter.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
