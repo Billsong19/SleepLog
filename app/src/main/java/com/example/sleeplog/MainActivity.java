@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Handler;
 //import android.support.v7.app.AppCompactActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,26 +13,32 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Clock;
 
-//TODO make unit tests for clock? Would maybe have to encapsulate clock logic for
+//TODO make unit tests for timer. Would maybe have to refactor clock logic for
 // tests.
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     TextView timer ;
-    Button startButton, pauseButton, resetButton, stopAndLog, settingsButton, sleepLogButton;
-    long MillisecondTime, TimeBuff, UpdateTime = 0L ;
-    LocalDateTime _startTime;
-    Duration _timeElapsed;
+    Button startButton, pauseButton, finishedSleepingButton, resetButton
+            , settingsButton, sleepLogButton;
     File _sleepLogFile;
+    boolean _timerPaused;
+    SleepSession _sleepSession;
 
     Handler handler;
     long Seconds, Minutes, _hours;
+    /*
+     UI Button state table, columns=buttons, rows=states
+                        Start   Stop    Reset
+     unstarted          1       0       0
+     ongoing            0       1       0
+     pausedOngoing      1       0       1
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,38 +49,47 @@ public class MainActivity extends AppCompatActivity {
 
         _sleepLogFile = new File(this.getFilesDir(), "SleepLog.txt");
 
-//        FileOutputStream stream;
-//        try {
-//            stream = new FileOutputStream(_sleepLogFile);
-//            stream.write("HELLO WORLD".getBytes());
-//            stream.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        //read
-
-
-
-
         timer = (TextView)findViewById(R.id.Timer);
         startButton = (Button)findViewById(R.id.Start);
         pauseButton = (Button)findViewById(R.id.Stop);
+        finishedSleepingButton = (Button)findViewById(R.id.FinishedSleeping);
         resetButton = (Button)findViewById(R.id.Reset);
-        stopAndLog = (Button)findViewById(R.id.FinishedSleeping);
         settingsButton = (Button)findViewById(R.id.Settings);
         sleepLogButton = (Button)findViewById(R.id.SleepLog);
 
+        if(savedInstanceState != null){
+            String previousStartTime = savedInstanceState.getString("Start Time");
+            _timerPaused = savedInstanceState.getBoolean("Timer Paused");
+            _sleepSession = new SleepSession(previousStartTime);
+            if (_timerPaused){
+                Log.d(TAG, "onCreate: Start Time " + previousStartTime + " restored in paused state");
+            }
+            Log.d(TAG, "onCreate: Start Time " + previousStartTime + "restored in unpaused state");
 
+        }
+
+        if (!_timerPaused)
+        {
+            finishedSleepingButton.setEnabled(false);
+        }
         handler = new Handler() ;
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "onClick: startButton clicked");
 
-                _startTime = LocalDateTime.now();
+                if (_timerPaused==false){
+                    _sleepSession = new SleepSession(Clock.systemDefaultZone());
+                    Log.d(TAG, "onClick: bedTime reset");
+                }
+
                 handler.postDelayed(runnable, 0);
 
-                resetButton.setEnabled(false);
+                startButton.setEnabled(false);
+                startButton.setText("Resume");
+                pauseButton.setEnabled(true);
+                finishedSleepingButton.setEnabled(false);
             }
         });
 
@@ -83,30 +99,49 @@ public class MainActivity extends AppCompatActivity {
 
                 handler.removeCallbacks(runnable);
 
-                resetButton.setEnabled(true);
-
+                startButton.setEnabled(true);
+                pauseButton.setEnabled(false);
+                finishedSleepingButton.setEnabled(true);
+                _timerPaused = true;
             }
         });
 
-        resetButton.setOnClickListener(new View.OnClickListener() {
+        finishedSleepingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 timer.setText("00:00:00");
 
-                SleepSession sleepSession = new SleepSession(_startTime, LocalDateTime.now());
+                SleepSession sleepSession = new SleepSession(Clock.systemDefaultZone());
+
+                //write the finished sleepSession into SleepLog.txt
                 FileWriter writer;
                 BufferedWriter bufferedWriter;
                 try {
                     bufferedWriter = new BufferedWriter(new FileWriter(_sleepLogFile, true));
-                    bufferedWriter.write(sleepSession.getLogString());
+                    bufferedWriter.write(_sleepSession.getLogString());
                     bufferedWriter.newLine();
-                    System.out.println("Wrote " + sleepSession.get_byteArray().toString() +
-                            " to SleepLog.txt");
+                    Log.d(TAG, "onClick: Wrote "+ _sleepSession.getLogString() + " to SleepLog.txt");
                     bufferedWriter.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                startButton.setEnabled(true);
+                _timerPaused=false;
+                startButton.setText("Start");
+                finishedSleepingButton.setEnabled(false);
             }
+        });
+
+        resetButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                timer.setText("00:00:00");
+                startButton.setEnabled(true);
+                _timerPaused=false;
+                startButton.setText("Start");
+                finishedSleepingButton.setEnabled(false);
+            }
+
         });
 
         final Intent _settings = new Intent(MainActivity.this, SettingsActivity.class);
@@ -116,14 +151,41 @@ public class MainActivity extends AppCompatActivity {
         sleepLogButton.setOnClickListener(view -> startActivity(_sleepLog));
     }
 
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+
+        String previousStartTime = savedInstanceState.getString("Start Time");
+        _timerPaused = savedInstanceState.getBoolean("Timer Paused");
+        _sleepSession = new SleepSession(previousStartTime);
+        if (_timerPaused){
+            Log.d(TAG, "onRestoreInstanceState: Start Time " + previousStartTime + " restored in paused state");
+        }
+        Log.d(TAG, "onRestoreInstanceState: Start Time " + previousStartTime + "restored in unpaused state");
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState (Bundle outState)
+    {
+        if (_sleepSession != null) {
+            outState.putString("Start Time", _sleepSession.getBedTime().toString());
+            outState.putBoolean("Timer Paused", _timerPaused);
+            Log.d(TAG, "onSaveInstanceState: " + _sleepSession.getBedTime().toString() + " saved.");
+        }
+        super.onSaveInstanceState(outState);
+
+    }
+
+
     public Runnable runnable = new Runnable() {
 
         public void run() {
 
-            SleepSession sleepSession = new SleepSession(_startTime, LocalDateTime.now());
+            _sleepSession.updateWakeTime(Clock.systemDefaultZone());
 
-            timer.setText(sleepSession.toString());
+            timer.setText(_sleepSession.timeElapsedString());
 
             handler.postDelayed(this, 0);
         }
-    };}
+    };
+}

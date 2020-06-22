@@ -36,6 +36,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called");
 
+        //set textviews in ViewHolder holder at position to their appropriate values.
         holder._timeDataView.setText(_sleepLog.get_sleepSession(position).getTimeDataString());
         holder._dateDataView.setText(_sleepLog.get_sleepSession(position).getDateDataString());
     }
