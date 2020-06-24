@@ -57,22 +57,13 @@ public class MainActivity extends AppCompatActivity {
         settingsButton = (Button)findViewById(R.id.Settings);
         sleepLogButton = (Button)findViewById(R.id.SleepLog);
 
-        if(savedInstanceState != null){
-            String previousStartTime = savedInstanceState.getString("Start Time");
-            _timerPaused = savedInstanceState.getBoolean("Timer Paused");
-            _sleepSession = new SleepSession(previousStartTime);
-            if (_timerPaused){
-                Log.d(TAG, "onCreate: Start Time " + previousStartTime + " restored in paused state");
-            }
-            Log.d(TAG, "onCreate: Start Time " + previousStartTime + "restored in unpaused state");
-
-        }
+        handler = new Handler() ;
 
         if (!_timerPaused)
         {
             finishedSleepingButton.setEnabled(false);
         }
-        handler = new Handler() ;
+
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,11 +147,17 @@ public class MainActivity extends AppCompatActivity {
 
         String previousStartTime = savedInstanceState.getString("Start Time");
         _timerPaused = savedInstanceState.getBoolean("Timer Paused");
-        _sleepSession = new SleepSession(previousStartTime);
+        if (previousStartTime!=null) {
+            _sleepSession = new SleepSession(previousStartTime);
+            handler.postDelayed(runnable, 0);
+        }
         if (_timerPaused){
             Log.d(TAG, "onRestoreInstanceState: Start Time " + previousStartTime + " restored in paused state");
         }
-        Log.d(TAG, "onRestoreInstanceState: Start Time " + previousStartTime + "restored in unpaused state");
+        else {
+            Log.d(TAG, "onRestoreInstanceState: Start Time " + previousStartTime + "restored in unpaused state");
+
+        }
         super.onRestoreInstanceState(savedInstanceState);
     }
 
