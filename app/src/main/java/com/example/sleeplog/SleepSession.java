@@ -1,28 +1,34 @@
 package com.example.sleeplog;
 
+import android.util.Log;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class SleepSession {
+    private static final String TAG = "SleepSession";
     private Duration _sleepDuration;
     private LocalDateTime _bedTime, _wakeTime;
     private long _hours, _minutes, _seconds ;
-//    private TemporalUnit ChronoUnit.MINUTE;
 
-//    public SleepSession(LocalDateTime bedTime, LocalDateTime wakeTime) {
-//
-//        _sleepDuration = Duration.between(bedTime, wakeTime);
-//        _bedTime = bedTime;
-//        _wakeTime = wakeTime;
-//        _hours = (long)_sleepDuration.toHours();
-//        _minutes = (long)_sleepDuration.minusHours(_hours).toMinutes();
-//        _seconds = (long)_sleepDuration.minusHours(_hours).minusMinutes(_minutes).getSeconds();
-//    }
-
-    public String getLogString() {
+    private String getLogString() {
         return _bedTime.toString() + " " + _wakeTime.toString();
+    }
+
+    public void writeToFile(BufferedWriter writer){
+        try {
+            writer.write(this.getLogString());
+            writer.newLine();
+            Log.d(TAG, "writeToFile: Wrote "+ this.getLogString() + " to SleepLog.txt");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -40,7 +46,7 @@ public class SleepSession {
     }
 
     public String getTimeDataString() {
-        return Long.toString(_hours) + " Hrs" + _bedTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES) + "->" +
+        return Long.toString(_hours) + ":" + Long.toString(_minutes) + "Hrs " + _bedTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES) + "->" +
                 _wakeTime.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
     }
 

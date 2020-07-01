@@ -23,22 +23,15 @@ import java.time.Clock;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    TextView timer ;
-    Button startButton, pauseButton, finishedSleepingButton, resetButton
+    private TextView timer ;
+    private Button startButton, pauseButton, finishedSleepingButton, resetButton
             , settingsButton, sleepLogButton;
-    File _sleepLogFile;
+    private File _sleepLogFile;
     boolean _timerPaused;
-    SleepSession _sleepSession;
+    private SleepSession _sleepSession;
 
     Handler handler;
     long Seconds, Minutes, _hours;
-    /*
-     UI Button state table, columns=buttons, rows=states
-                        Start   Stop    Reset
-     unstarted          1       0       0
-     ongoing            0       1       0
-     pausedOngoing      1       0       1
-     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         //AppCompatActivity extends Context so we use it in File constructor param
 
         _sleepLogFile = new File(this.getFilesDir(), "SleepLog.txt");
+        Log.d(TAG, "onCreate: sleeplog file path = " + _sleepLogFile.toString() + ".");
 
         timer = (TextView)findViewById(R.id.Timer);
         startButton = (Button)findViewById(R.id.Start);
@@ -56,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         resetButton = (Button)findViewById(R.id.Reset);
         settingsButton = (Button)findViewById(R.id.Settings);
         sleepLogButton = (Button)findViewById(R.id.SleepLog);
+
+        TimerUIState _timerUIState = new TimerUIState(startButton,pauseButton,finishedSleepingButton,resetButton);
 
         handler = new Handler() ;
 
@@ -77,10 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
                 handler.postDelayed(runnable, 0);
 
-                startButton.setEnabled(false);
-                startButton.setText("Resume");
-                pauseButton.setEnabled(true);
-                finishedSleepingButton.setEnabled(false);
+                _timerUIState.clickStart();
+
             }
         });
 
@@ -90,9 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
                 handler.removeCallbacks(runnable);
 
-                startButton.setEnabled(true);
-                pauseButton.setEnabled(false);
-                finishedSleepingButton.setEnabled(true);
+                _timerUIState.clickPause();
+
                 _timerPaused = true;
             }
         });
@@ -105,21 +98,21 @@ public class MainActivity extends AppCompatActivity {
                 SleepSession sleepSession = new SleepSession(Clock.systemDefaultZone());
 
                 //write the finished sleepSession into SleepLog.txt
-                FileWriter writer;
-                BufferedWriter bufferedWriter;
+
                 try {
-                    bufferedWriter = new BufferedWriter(new FileWriter(_sleepLogFile, true));
-                    bufferedWriter.write(_sleepSession.getLogString());
-                    bufferedWriter.newLine();
-                    Log.d(TAG, "onClick: Wrote "+ _sleepSession.getLogString() + " to SleepLog.txt");
-                    bufferedWriter.close();
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(_sleepLogFile, true));
+                _sleepSession.writeToFile(bufferedWriter);
+//                    bufferedWriter.write(_sleepSession.getLogString());
+//                    bufferedWriter.newLine();
+//                    Log.d(TAG, "onClick: Wrote "+ _sleepSession.getLogString() + " to SleepLog.txt");
+//                    bufferedWriter.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                startButton.setEnabled(true);
+
+                _timerUIState.clickFinishedSleeping();
                 _timerPaused=false;
-                startButton.setText("Start");
-                finishedSleepingButton.setEnabled(false);
+
             }
         });
 
@@ -127,10 +120,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 timer.setText("00:00:00");
-                startButton.setEnabled(true);
                 _timerPaused=false;
-                startButton.setText("Start");
-                finishedSleepingButton.setEnabled(false);
+                _timerUIState.clickReset();
             }
 
         });

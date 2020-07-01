@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+//TODO write tests for problematic input combos.
 @RunWith(AndroidJUnit4.class)
 public class TestMainActivity {
 private ActivityScenario<MainActivity> _scenario;
