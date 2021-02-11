@@ -15,22 +15,18 @@ import java.io.File;
 public class SleepLogActivity extends AppCompatActivity {
     private static final String TAG = "SleepLogActivity";
 
-    private SleepLog _sleepLog;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sleeplog_main);
         Log.d(TAG, "onCreate: started");
-        File _sleepLogFile = new File(this.getFilesDir(), "SleepLog.txt");
-        _sleepLog = new SleepLog(_sleepLogFile);
         initRecyclerView();
     }
 
     private void initRecyclerView() {
         Log.d(TAG, "initRecyclerView: init recyclerview");
         RecyclerView recyclerView = findViewById(R.id.sleeplog_recyclerview);
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(_sleepLog, this);
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(this);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }

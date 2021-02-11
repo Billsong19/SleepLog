@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 //TODO write tests for problematic input combos.
 @RunWith(AndroidJUnit4.class)
 public class TestMainActivity {
-private ActivityScenario<MainActivity> _scenario;
+    private ActivityScenario<MainActivity> _scenario;
+
     @Before
     public void setUpScenario(){
         ActivityScenario<MainActivity> _scenario = ActivityScenario.launch(MainActivity.class);

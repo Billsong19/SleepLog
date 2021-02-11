@@ -1,5 +1,7 @@
 package com.example.sleeplog;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +9,8 @@ import android.widget.Button;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Scanner;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -19,20 +23,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         button2 = (Button)findViewById(R.id.button2);
 
-        File _sleepLogFile = new File(this.getFilesDir(), "SleepLog.txt");
-        try {
-            Scanner myReader = new Scanner(_sleepLogFile);
-            String str = myReader.nextLine();
-            System.out.println(str);
-            System.out.println(SleepSession.parse(str).toString());
-            button2.setText(SleepSession.parse(str).toString());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
         button3 = (Button)findViewById(R.id.button3);
-        button4 = (Button)findViewById(R.id.button4);
+        button3.setText("Add 10h sleep");
+        button3.setOnClickListener(view -> {
+            System.out.println("HI");
+            AppDatabase db = AppDatabase.getInstance(this);
+            SleepLogDao sleepDao = db.sleepLogDao();
+            List<SleepSessionEntity> sleeps = sleepDao.getAll();
 
+            sleeps.forEach(sleepsesh-> System.out.println(sleepsesh._bedTime.toString()));
+            sleepDao.insertAll(new SleepSessionEntity(LocalDateTime.now(), LocalDateTime.now().plusHours(10)));
+        });
+        button4 = (Button)findViewById(R.id.button4);
     }
 }
